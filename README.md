@@ -73,6 +73,7 @@ credit_scoring_engine/
     ├── fairness.py        # disparate impact / four-fifths audit
     ├── threshold.py       # cost-based threshold search
     └── pipeline.py         # orchestrates all of the above
+    
 ```
 
 ## Setup
