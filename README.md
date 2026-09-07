@@ -138,5 +138,5 @@ def disparate_impact_ratio(df, decision_col, protected_col, favorable_outcome=0,
     result["di_ratio"] = result["approval_rate"] / reference_rate
     result["passes_four_fifths"] = result["di_ratio"] >= threshold
     return result.sort_values("di_ratio")
-```return result.sort_values("di_ratio")
+```
  
