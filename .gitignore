@@ -1,0 +1,17 @@
+# Raw data — never commit real customer/loan data
+MoPhones_CaseStudy/
+data/
+*.csv
+*.xlsx
+*.xls
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+*.egg-info/
+
+# OS/editor
+.DS_Store
+.vscode/
