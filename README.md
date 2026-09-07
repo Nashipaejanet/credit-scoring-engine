@@ -1,8 +1,8 @@
 # Credit Scoring Engine
 
 A leakage-free, fairness-audited credit scoring model built on MoPhones
-loan portfolio data, using an out-of-time train/test design so the model
-is never scored on information it wouldn't have had at decision time.
+loan portfolio data. Uses an out-of-time train/test design so the model
+never sees information it wouldn't have had at decision time.
 
 ## What it does
 
@@ -10,12 +10,12 @@ is never scored on information it wouldn't have had at decision time.
    workbook and an NPS survey.
 2. **Splits** the credit history at a cutoff date (31 Mar 2025) into an
    early window (used for features) and a late window (used to define the
-   outcome) — an out-of-time design that prevents the model from seeing
-   the future.
+   outcome). This out-of-time design stops the model from seeing the
+   future.
 3. **Engineers features** from the early window only: worst/average days
    past due, times in arrears, a data-quality flag for ARREARS/DPD
-   mismatches (never imputed — flagged), collection rate, months on book,
-   and utilisation ratio.
+   mismatches (never imputed, always flagged), collection rate, months on
+   book, and utilisation ratio.
 4. **Builds a leakage-free target**: excludes loans already in a bad or
    ambiguous state at the cutoff, then labels the rest "bad" if they reach
    FPD/FMD/PAR 30 status in the late window.
@@ -31,7 +31,7 @@ is never scored on information it wouldn't have had at decision time.
 ```
 credit_scoring_engine/
 ├── config.py           # paths, cutoff dates, feature list, thresholds
-├── run.py               # entry point — runs the full pipeline
+├── run.py               # entry point, runs the full pipeline
 ├── requirements.txt
 └── src/
     ├── data_loader.py    # load + clean credit / demo / NPS sources
@@ -62,7 +62,7 @@ On Windows (Command Prompt):
 set CREDIT_DATA_DIR=C:\path\to\your\data\folder
 ```
 
-This data is not included in the repo — see `.gitignore`.
+This data isn't included in the repo, see `.gitignore`.
 
 ## Run
 
@@ -86,16 +86,16 @@ Verified results from a full run on the real MoPhones portfolio data:
 | Cost reduction vs. naive threshold | 46.8% |
 
 **Fairness audit:**
-- **Gender** — passes the four-fifths rule. Male approval rate 70.1%, female 74.3% (di_ratio 0.94).
-- **Age band** — the **18-25 group fails** the four-fifths rule, with a di_ratio of 0.63 (approval rate 53.6% vs. 85.7% for the 56+ reference group). All other age bands (26-35 through 56+) pass.
+- **Gender** passes the four-fifths rule. Male approval rate 70.1%, female 74.3% (di_ratio 0.94).
+- **Age band**: the **18-25 group fails** the four-fifths rule, with a di_ratio of 0.63 (approval rate 53.6% vs. 85.7% for the 56+ reference group). All other age bands (26-35 through 56+) pass.
 
-This is a genuine finding, not a modeling artifact — it's flagged here rather than smoothed over. Younger borrowers are being approved at a meaningfully lower rate than older ones, which is the kind of disparate impact this audit exists to catch. Next steps worth investigating: whether age-correlated features (e.g. months on book, utilisation ratio) are acting as a proxy for age, and whether a fairness constraint should be added to model training rather than relying on threshold adjustment alone.
+This is a genuine finding, not a modeling artifact, and it's flagged here rather than smoothed over. Younger borrowers are being approved at a meaningfully lower rate than older ones, which is exactly the kind of disparate impact this audit exists to catch. Worth investigating next: whether age-correlated features (like months on book or utilisation ratio) are acting as a proxy for age, and whether a fairness constraint should be added to model training rather than relying on threshold adjustment alone.
 
 ## Design notes
 
 - **No DPD imputation from ARREARS.** Where `ARREARS > 0` but
   `DAYS_PAST_DUE == 0`, that's flagged as a feature
-  (`arrears_dpd_mismatch_ever`) rather than "corrected" — inventing a DPD
+  (`arrears_dpd_mismatch_ever`) rather than "corrected." Inventing a DPD
   value from ARREARS would be fabricating data the source system doesn't
   actually provide.
 - **Out-of-time, not random, split.** Features come strictly from before
@@ -109,7 +109,7 @@ This is a genuine finding, not a modeling artifact — it's flagged here rather 
 
 ## Code highlights
 
-**Leakage prevention** — a loan only enters training if it existed early
+**Leakage prevention.** A loan only enters training if it existed early
 enough to have features *and* wasn't already in a bad/ambiguous state at
 the cutoff (`src/target.py`):
 
@@ -122,7 +122,7 @@ def eligible_loans(early_panel, cutoff_status, exclude_statuses=None):
     return [loan for loan in all_early_loans if loan not in excluded[excluded].index]
 ```
 
-**Disparate impact (four-fifths rule)** — checks whether any protected
+**Disparate impact (four-fifths rule).** Checks whether any protected
 group's approval rate falls below 80% of the highest-approved group's rate
 (`src/fairness.py`):
 
