@@ -29,37 +29,6 @@ is never scored on information it wouldn't have had at decision time.
 ## Project structure
 
 ```
-# Credit Scoring Engine
-
-A leakage-free, fairness-audited credit scoring model built on MoPhones
-loan portfolio data, using an out-of-time train/test design so the model
-is never scored on information it wouldn't have had at decision time.
-
-## What it does
-
-1. **Loads** five quarterly credit snapshots plus a sales/demographics
-   workbook and an NPS survey.
-2. **Splits** the credit history at a cutoff date (31 Mar 2025) into an
-   early window (used for features) and a late window (used to define the
-   outcome) — an out-of-time design that prevents the model from seeing
-   the future.
-3. **Engineers features** from the early window only: worst/average days
-   past due, times in arrears, a data-quality flag for ARREARS/DPD
-   mismatches (never imputed — flagged), collection rate, months on book,
-   and utilisation ratio.
-4. **Builds a leakage-free target**: excludes loans already in a bad or
-   ambiguous state at the cutoff, then labels the rest "bad" if they reach
-   FPD/FMD/PAR 30 status in the late window.
-5. **Trains** a scaled Logistic Regression classifier and reports AUC.
-6. **Audits fairness** using the four-fifths (disparate impact) rule
-   across gender and age band.
-7. **Optimizes the decision threshold** by expected business cost (cost of
-   a missed default vs. cost of rejecting a good loan), instead of using
-   the naive 0.5 cutoff.
-
-## Project structure
-
-```
 credit_scoring_engine/
 ├── config.py           # paths, cutoff dates, feature list, thresholds
 ├── run.py               # entry point — runs the full pipeline
@@ -73,7 +42,6 @@ credit_scoring_engine/
     ├── fairness.py        # disparate impact / four-fifths audit
     ├── threshold.py       # cost-based threshold search
     └── pipeline.py         # orchestrates all of the above
-    
 ```
 
 ## Setup
@@ -170,4 +138,5 @@ def disparate_impact_ratio(df, decision_col, protected_col, favorable_outcome=0,
     result["di_ratio"] = result["approval_rate"] / reference_rate
     result["passes_four_fifths"] = result["di_ratio"] >= threshold
     return result.sort_values("di_ratio")
+```return result.sort_values("di_ratio")
  
